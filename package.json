@@ -1,0 +1,14 @@
+{
+  "name": "blood_on_clocktower_ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node src/main.js",
+    "knowledge:download": "node scripts/downloadKnowledge.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "langchain": "^1.0.6",
+    "openai": "^6.9.1"
+  }
+}
