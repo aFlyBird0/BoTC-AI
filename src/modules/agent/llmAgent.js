@@ -4,6 +4,17 @@ const { ChatArk } = require('./ark')
 const { shuffleTokenMap } = require('../game/roleManager')
 
 function createLlmAgent({ } = {}) {
+  function buildDayCheckMessages({ stateSnapshot, script }) {
+    const sys = `角色: 血染钟楼AI说书人
+目标: 白天处决结束后进行一次胜利判定与必要的身份变更
+输出: 仅返回json对象 { "ops": [ { "type": string, "payload": object } ] }
+可用工具: 仅允许 gameover、end_role、change_character
+说明: 若无胜利条件满足，请返回 end_role；若满足则返回 gameover（包含胜利阵营/玩家与原因）。若因处决触发身份变更（如红唇女郎成为恶魔），请先返回 change_character 再返回 end_role`
+    const user = `当前全场状态: ${JSON.stringify(stateSnapshot)}`
+    const msgs = [{ role: 'system', content: sys }, { role: 'user', content: user }]
+    if (script) msgs.push({ role: 'user', content: renderScript(script) })
+    return msgs
+  }
   function buildNigntAgentMessages({ phase, role, stateSnapshot, script, targetSeat, timeLabel }) {
     const sys = `角色: 血染钟楼AI说书人
 目标: 在游戏的夜晚按剧本与核心规则结算当前角色的行动
@@ -132,13 +143,13 @@ function createLlmAgent({ } = {}) {
 - 所有角色唯一分配 (同名角色不可重复)
 - 阵营数量必须满足基础比例 (镇民/外来者/爪牙/恶魔)
 - 仅可从候选角色列表中选择分配
+- 座位号从 1 到玩家总数连续分配
 初始比例特殊调整规则:
 - 如果你决定初始角色中包含以下任意一个角色，你在按照初始比例分配角色之后，还需要按照对应角色技能描述的[]内的要求继续进行调整，对应的差额数量从镇民中扣除
 ${adjustLines}
 一致性规则:
 - 若技能描述包含“你以为自己是xxx”（认知覆盖类角色）, 则 knownRole 与 realRole 不一致, knownRole要按照角色能力描述分配；否则 knownRole=realRole
-- 座位号从 1 到玩家总数连续分配
-提示: 初始 tokens 请根据 setup 与开局信息最小化生成 (如 "是酒鬼"、必要的提醒等)`
+提示: 初始 tokens 请根据 setup 与开局信息最小化生成 (如 "是酒鬼"、首夜信息等)`
     const userPayload = {
       playerCount,
       baseRatio: base,
@@ -160,17 +171,6 @@ ${adjustLines}
     } catch {
       return null
     }
-  }
-  function buildDayCheckMessages({ stateSnapshot, script }) {
-    const sys = `角色: 血染钟楼AI说书人
-目标: 白天处决结束后进行一次胜利判定与必要的身份变更
-输出: 仅返回json对象 { "ops": [ { "type": string, "payload": object } ] }
-可用工具: 仅允许 gameover、end_role、change_character
-说明: 若无胜利条件满足，请返回 end_role；若满足则返回 gameover（包含胜利阵营/玩家与原因）。若因处决触发身份变更（如红唇女郎成为恶魔），请先返回 change_character 再返回 end_role`
-    const user = `当前全场状态: ${JSON.stringify(stateSnapshot)}`
-    const msgs = [{ role: 'system', content: sys }, { role: 'user', content: user }]
-    if (script) msgs.push({ role: 'user', content: renderScript(script) })
-    return msgs
   }
   return { decideForRole, decideAllocation, buildRoleMessages: buildNigntAgentMessages, invokeRoleOps, buildDayCheckMessages }
 }
