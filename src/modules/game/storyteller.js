@@ -106,6 +106,10 @@ function createStoryteller({ interaction, state, script }) {
           process.stdout.write(`广播: 座位${op.payload.seat} 在第${state.currentNightIndex || '?'}个夜晚因技能效果死亡\n`)
         }
       }
+      if (op.type === 'replace_token') {
+        const tokens = Array.isArray(op.payload && op.payload.tokens) ? op.payload.tokens.map(String) : []
+        state.replaceTokens(op.payload.seat, tokens)
+      }
       if (op.type === 'remove_token') state.removeToken(op.payload.seat, op.payload.token)
       if (op.type === 'gameover') { interaction.broadcast({ type: 'game_end', payload: op.payload }); ended = true }
       if (op.type === 'end_role') {}

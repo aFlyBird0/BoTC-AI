@@ -6,7 +6,7 @@
 const { renderScript } = require('../game/scriptLoader')
 const { parseToolsFromLLM } = require('../utils/toolkit')
 const { ChatArk } = require('./ark')
-const { record } = require('../common/collector')
+const { record } = require('../common/record')
 
 function createStoryTellerAgent({ } = {}) {
 
@@ -41,18 +41,18 @@ function createStoryTellerAgent({ } = {}) {
 
 # 说书人流程
 ## 核心工具
-使用 add_token 和 remove_token 工具来维护一个记事本（游戏术语为魔典），记录所有玩家的状态和当前游戏进度（昼/夜，当前是第x天）。当记录玩家状态时，seat传入他的座位号，当记录游戏进度时，seat传入0，且source使用“daynight”、“date”等固定字符串。
+使用 replace_token 工具维护记事本（魔典），按座位一次性替换该座位的所有 token（为空数组即清空）。当记录游戏进度时，seat传入0，建议用字符串键值形式记录，例如 "daynight:night"、"date:0"。
 ## 流程
 1. 首个夜晚
-    a. 使用add_token, 记录daynight="night", date="0"
-    b. 根据剧本指定的首夜行动顺序和在场的玩家角色，使用add_token记录接下来的行动计划表，如 seq="3,5,1,8", 表示接下来需要顺序唤醒3,5,1,8号玩家，执行完成后可以结束黑夜
+    a. 使用replace_token，将 seat=0 的 tokens 设置为 ["daynight:night", "date:0"]
+    b. 根据剧本指定的首夜行动顺序和在场的玩家角色，执行完成后可以结束黑夜
     c. 根据剧本技能描述和玩家状态，使用合适的工具正确执行他的技能
-    d. 所有玩家技能执行完成后，使用add_token, 记录daynight="day", date="1", 并broadcast, 宣布进入白天，同时调用ask(seat=0)，等待玩家发起主动技能或者发起提名
+    d. 所有玩家技能执行完成后，使用replace_token，将 seat=0 的 tokens 设置为 ["daynight:day", "date:1" ]，并 broadcast 宣布进入白天，同时调用 ask(seat=0) 等待玩家发起主动技能或者发起提名
 2. 白天
     a. 如果玩家发起主动技能，根据其技能和状态，使用合适的工具执行。
-    b. 如果玩家询问游戏规则，可以根据剧本描述客观解释，但是确保不能以任何形式透漏任何玩家的真实角色或状态，即add_token(seat!=0)记录的数据
+    b. 如果玩家询问游戏规则，可以根据剧本描述客观解释，但是确保不能以任何形式透漏任何玩家的真实角色或状态，即 replace_token(seat!=0) 记录的数据
     c. 如果玩家发起提名，如果有角色技能与提名相关，进行适当结算，然后使用ask(seat=0)直接询问玩家投票结果（逗号分隔的投票玩家座位号），然后继续等待下一次提名
-    d. 如果玩家决定结束这个白天，如果此时没有有效的提名，直接使用add_token流转昼夜和日期以进入黑夜；如果有有效提名，使用mark_death标记死亡后再进入黑夜。
+    d. 如果玩家决定结束这个白天，如果此时没有有效的提名，直接使用 replace_token 流转昼夜和日期以进入黑夜；如果有有效提名，使用 mark_death 标记死亡后再进入黑夜。
 3. 其他夜晚
     a. 仿照首个夜晚的流程，但是行动顺序按照剧本指定的非首页顺序进行
     b. 夜晚执行结束后的broadcast需要附带这一晚的死亡信息。
@@ -70,10 +70,8 @@ function createStoryTellerAgent({ } = {}) {
     { "type": "tell", "payload": { "seat": 3, "message": "0" } },
     // broadcast: 公共广播
     { "type": "broadcast", "payload": { "message": "4号玩家声称自己是猎手向8号玩家开枪，无事发生" } },
-    // add_token: 添加状态，使用时要标记该token的来源角色
-    { "type": "add_token", "payload": { "seat": 3, "token": "保护", "source": "僧侣" } },
-    // remove_token: 移除状态，使用时要标记该token的来源角色
-    { "type": "remove_token", "payload": { "seat": 3, "token": "保护", "source": "僧侣" } },
+    // replace_token: 替换指定座位的所有 token
+    { "type": "replace_token", "payload": { "seat": 3, "tokens": ["僧侣:保护"] } },
     // mark_death: 标记玩家死亡，使用时要标记该token的来源角色
     { "type": "mark_death", "payload": { "seat": 3, "status": "death", "source": "处决" } },
     // set_character: 改变角色，将指定座位的角色变为指定阵营的指定角色，如果来源技能无法改变阵营，则不要携带team字段，仅在new_known和new_real字段指定目标角色名称，如果新角色技能包含“你以为自己是xxx”，则在new_known字段指定xxx，在new_real字段填入真实身份
@@ -86,11 +84,10 @@ function createStoryTellerAgent({ } = {}) {
 - ask: 在夜间处理需要玩家选择的技能，或者一次性技询问玩家是否要现在释放，或在白天等待别的玩家释放技能或发起提名，无目标等待时可以给seat字段传0。
 - tell: 在白天或夜晚处理任何不需要玩家响应的技能，单向的告知特定一个玩家一些信息。
 - broadcast: 公共广播，向所有玩家公开告知一些信息。
-- add_token: 向“魔典”上增加一些标记，用这个工具维护一个记事本来避免弄错技能。按照技能提示来操作，你也可以自由增加一些备忘标志（如定时移除xxx token）。
-- remove_token: 从“魔典”上移除一些状态，用这个工具维护一个记事本来避免弄错技能。按照技能提示来操作，你也可以自由移除一些备忘标志。
+- replace_token: 一次性替换某座位的所有 token（数组），用于维护“魔典”。当需要清空时传空数组；记录游戏进度时使用 seat=0 并以字符串键值形式记录（如 "daynight:night"、"date:1"）。
 - mark_death: 标记玩家生死，status可以为alive/death
 - set_character: 改变角色，处理舞蛇人、麻脸巫婆等特殊角色的技能，他们可以改变玩家的角色和/或阵营。
-- game_over: 任何时候你发现触发了游戏结束条件，都可以用它立刻结束游戏，工具会帮你告知所有玩家大家的真实身份。
+- game_over: 任何时候你发现触发了游戏结束条件，都可以用它立刻结束游戏，工具会帮你告知所有玩家大家的真实身份。注意，在判断游戏结束前，要先确认是否有其他玩家的主动或被动技能可触发，若有，游戏可能未结束（例如有的恶魔死的早，会让其他玩家成为恶魔）。
 `
         const user = `当前全场状态:\n${stateText}\n当前时间: ${time}`
         const msgs = [{ role: 'system', content: sys }, { role: 'user', content: user }]

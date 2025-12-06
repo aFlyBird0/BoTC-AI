@@ -31,6 +31,13 @@ class NewSingleAgentState {
     const p = this.getPlayer(seat)
     if (p) p.tokens = this.getTokens(seat)
   }
+  // 替换所有标记
+  replaceTokens(seat, tokens) {
+    const list = Array.isArray(tokens) ? tokens.map(t => String(t)) : []
+    this.tokenMap.set(seat, new Set(list))
+    const p = this.getPlayer(seat)
+    if (p) p.tokens = this.getTokens(seat)
+  }
   // 标记死亡
   kill(seat) {
     const p = this.getPlayer(seat)
@@ -100,7 +107,7 @@ function renderStateTable(state) {
     return `${p.seat}\t${p.alive ? '存活' : '死亡'}\t${p.knownRole || ''}\t${p.realRole || ''}\t${tokens}`
   })
   const header = '座位\t状态\t可见身份\t真实身份\tTokens'
-  return [header, ...rows].join('\n')
+  return '\n' + [header, ...rows].join('\n')
 }
 
 module.exports = { NewSingleAgentState, renderStateTable }

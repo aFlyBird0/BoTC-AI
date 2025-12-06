@@ -1,4 +1,4 @@
-const { record } = require('../common/collector')
+const { record } = require('../common/record')
 
 // 工具执行器说明：
 // - 输入: { state, interaction, tools }，其中 tools 为 { type, payload } 的列表
@@ -70,6 +70,14 @@ async function applyTools({ state, interaction, tools }) {
       const token = String(pl.token || '')
       state.removeToken(seat, token)
       results.push({ type: 'remove_token', seat, token })
+      snapshot()
+    },
+    // 替换标记：将该座位的所有 token 替换为给定列表，并记录快照
+    replace_token: async pl => {
+      const seat = Number(pl.seat || 0)
+      const tokens = Array.isArray(pl.tokens) ? pl.tokens.map(t => String(t)) : []
+      state.replaceTokens(seat, tokens)
+      results.push({ type: 'replace_token', seat, tokens })
       snapshot()
     },
     // 生死标记：根据 status 进行死亡或生还广播

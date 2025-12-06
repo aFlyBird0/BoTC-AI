@@ -1,4 +1,4 @@
-const { record } = require('../common/collector')
+const { record } = require('../common/record')
 const readline = require('readline')
 
 function question(promptText) {

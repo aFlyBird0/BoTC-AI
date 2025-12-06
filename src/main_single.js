@@ -9,7 +9,7 @@ const { Interaction } = require('./modules/game/interaction')
 const { NewReActAgent } = require('./modules/agent/agent')
 const { createStoryTellerAgent } = require('./modules/agent/storyteller')
 const { listScripts, loadScript } = require('./modules/game/scriptLoader')
-const { record } = require('./modules/common/collector')
+const { record } = require('./modules/common/record')
 
 async function run() {
   // Debug 演示：固定 8 人配置（与旧版一致）
