@@ -68,6 +68,13 @@ function createStoryteller({ interaction, state, script }) {
     state.currentDayIndex = index
     interaction.broadcast({ type: 'phase', value: 'day', index })
     process.stdout.write('广播: 进入白天\n')
+  }
+  function startPrivateChat() {
+    pendingPrompt = { seat: null, context: { type: 'chat' } }
+    paused = true
+    process.stdout.write('询问: 私聊阶段\n提示: 输入聊天文本；输入 "/end" 结束私聊\n期待: 多次聊天或结束私聊\n')
+  }
+  function promptExecution() {
     pendingPrompt = { seat: null, context: { type: 'execution' } }
     paused = true
     process.stdout.write('询问: 白天提名与处决\n提示: 输入 "execute 座位号" 或 "none"\n期待: 处决一名玩家或无人处决\n')
@@ -111,7 +118,9 @@ function createStoryteller({ interaction, state, script }) {
     if (!paused || !pendingPrompt) return null
     const ctx = pendingPrompt.context || {}
     let res
-    if (ctx.type === 'execution') {
+    if (ctx.type === 'chat') {
+      res = await interaction.questionAny('私聊：输入聊天文本（输入 "/end" 结束）')
+    } else if (ctx.type === 'execution') {
       res = await interaction.questionAny('白天提名与处决：输入 "execute 座位号" 或 "none"')
     } else {
       const ptxt = ctx.ability || '请按照提示进行输入'
@@ -126,7 +135,7 @@ function createStoryteller({ interaction, state, script }) {
     paused = true
     process.stdout.write('询问: 继续当前流程\n提示: 输入 ok 继续\n期待: 继续下一步\n')
   }
-  return { onPlayerMessage, startNight, startDay, applyOps, isPaused, awaitResponse, promptContinue }
+  return { onPlayerMessage, startNight, startDay, startPrivateChat, promptExecution, applyOps, isPaused, awaitResponse, promptContinue }
 }
 
 module.exports = { createStoryteller }
