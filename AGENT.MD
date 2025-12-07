@@ -2,17 +2,16 @@
 
 ## 概述
 - 目标：实现基于 LLM 的“血染钟楼”AI说书人，负责开局角色分配、夜晚/白天的规则推动、与玩家的交互，以及全局状态与 token 的维护。
-- 架构：将大模型相关逻辑置于 `src/modules/agent/` 下，游戏机制相关逻辑置于 `src/modules/game/` 下，入口为 `src/main.js`。
+- 架构：将大模型相关逻辑置于 `src/modules/agent/` 下，游戏机制相关逻辑置于 `src/modules/game/` 下，入口为 `src/main_single.js`。
 - 交互：当前使用命令行适配器，未来可替换为 IM/Web。
 
 ## 目录结构
 - `src/modules/agent/llmAgent.js`：LLM 调用与提示词（分配与技能执行）
-- `src/modules/game/roleManager.js`：角色管理模块，包含角色分配接口和玩家洗牌功能
+- `src/modules/utils/roleUtils.js`：角色相关工具（玩家洗牌等）
 - `src/modules/game/state.js`：对局状态（玩家、身份、token、存活）
 - `src/modules/game/scriptLoader.js`：剧本加载与解析（候选角色与夜序）
-- `src/modules/game/rules.js`：分配入口与胜利检查（占位）
-- `src/modules/game/storyteller.js`：说书人（广播、定向消息、阻塞询问与处决）
-- `src/modules/game/engine.js`：昼夜循环与状态表输出（夜序调度、阻塞控制）
+- （已移除）`src/modules/game/rules.js`
+- 单文件入口采用 `ReActAgent` 驱动，移除旧版 standalone storyteller/engine 入口依赖
 - `src/modules/game/cliAdapter.js`：命令行输入输出（座位号+文本）
 - `knowledge/`：规则与术语参考（用于提示词内嵌）
 
@@ -32,7 +31,7 @@
   - `BASE_URL`：LLM 接口地址
   - `MODEL`：模型标识
   - `API_KEY`：访问密钥
-- 启动：`node src/main.js`
+- 启动：`node src/main_single.js`
 - 调试：设置 `DEBUG=1` 可固定剧本与玩家数（默认 8），仍使用真实 LLM（若 `.env` 完整）。
 
 ## 提示词设计（分配阶段）
@@ -110,7 +109,7 @@
 - 纠偏：自动生成违规报告并请求 LLM 重试；多次失败则使用保底的确定性分配器
 
 ## 调试与扩展
-- 调试：`DEBUG=1 node src/main.js`（固定剧本与人数）
+- 调试：`DEBUG=1 node src/main_single.js`（固定剧本与人数）
 - 扩展：
   - 交互适配：将 `cliAdapter` 替换为 IM/Web 接口
   - RAG：将 `knowledge` 进一步清洗与结构化，接入检索增强提示
