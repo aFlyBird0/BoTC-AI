@@ -6,7 +6,7 @@ require('dotenv').config()
 const { AgentState, renderStateTable } = require('./modules/game/state')
 const { Interaction } = require('./modules/game/interaction')
 const { ReActAgent } = require('./modules/agent/agent')
-const { createStoryTellerAgent } = require('./modules/agent/storyteller')
+const { createStorytellerLlmAgent } = require('./modules/agent/storytellerLlm')
 const { selectAndLoadScript } = require('./modules/game/scriptLoader')
 const { RoleAllocAgent } = require('./modules/agent/roleAllocAgent')
 const { prompt } = require('./modules/utils/console')
@@ -28,7 +28,7 @@ async function run() {
   }
   const state = new AgentState({ players: (allocation && allocation.players) || [] })
   const interaction = new Interaction()
-  const llm = createStoryTellerAgent()
+  const llm = createStorytellerLlmAgent()
   const agent = new ReActAgent({ llm, state, interaction, script: scriptData })
   // 打印当前状态表
   record('state', renderStateTable(state))

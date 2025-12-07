@@ -8,12 +8,8 @@ const { parseToolsFromLLM } = require('../utils/toolkit')
 const { ChatArk } = require('./ark')
 const { record } = require('../common/record')
 
-function createStoryTellerAgent({ } = {}) {
+function createStorytellerLlmAgent({ } = {}) {
 
-    // 初始化 system/user 提示
-    // 输入: { stateText, time, script }
-    // 输出: messages 数组，包含 system 与 user 内容
-    // 设计: system 部分详细描述游戏规则与工具格式，user 部分提供当前状态
     function buildInitialMessages({ stateText, time, script }) {
         const sys = `# 角色
 血染钟楼(blood on the clocktower/BotC)AI说书人
@@ -63,31 +59,15 @@ function createStoryTellerAgent({ } = {}) {
 ## 基本格式
 标准json对象，不要携带任何前后缀，务必保证输出的所有内容可以直接按照json格式解码
 [ // 这里包含所有工具的示例，但是实际使用时根据需要选择使用
-    // ask: 询问玩家进行选择，询问时遵循信息最小化原则，只询问座位号、角色等关键信息，不要透露任何技能信息
     { "type": "ask", "payload": { "seat": 5, "message": "选择两名玩家" } },
-    // tell: 私密告知选择结果，使用时遵循信息最小化原则，不要透露技能内容，用最简单的描述告知结果
     { "type": "tell", "payload": { "seat": 5, "message": "有恶魔" } },
     { "type": "tell", "payload": { "seat": 3, "message": "0" } },
-    // broadcast: 公共广播
     { "type": "broadcast", "payload": { "message": "4号玩家声称自己是猎手向8号玩家开枪，无事发生" } },
-    // replace_token: 替换指定座位的所有 token
     { "type": "replace_token", "payload": { "seat": 3, "tokens": ["僧侣:保护"] } },
-    // mark_death: 标记玩家死亡，使用时要标记该token的来源角色
     { "type": "mark_death", "payload": { "seat": 3, "status": "death", "source": "处决" } },
-    // set_character: 改变角色，将指定座位的角色变为指定阵营的指定角色，如果来源技能无法改变阵营，则不要携带team字段，仅在new_known和new_real字段指定目标角色名称，如果新角色技能包含“你以为自己是xxx”，则在new_known字段指定xxx，在new_real字段填入真实身份
     { "type": "set_character", "payload": { "seat": 3, "team": "邪恶", "new_known": "小恶魔", "new_real": "疯子" } },
-    // game_over: 宣布游戏结束，确定胜利的一方
     { "type":"game_over", "payload": { "winner": "善良", "reason": "所有恶魔都被杀死" } }
 ]
-
-## 工具说明
-- ask: 在夜间处理需要玩家选择的技能，或者一次性技询问玩家是否要现在释放，或在白天等待别的玩家释放技能或发起提名，无目标等待时可以给seat字段传0。
-- tell: 在白天或夜晚处理任何不需要玩家响应的技能，单向的告知特定一个玩家一些信息。
-- broadcast: 公共广播，向所有玩家公开告知一些信息。
-- replace_token: 一次性替换某座位的所有 token（数组），用于维护“魔典”。当需要清空时传空数组；记录游戏进度时使用 seat=0 并以字符串键值形式记录（如 "daynight:night"、"date:1"）。
-- mark_death: 标记玩家生死，status可以为alive/death
-- set_character: 改变角色，处理舞蛇人、麻脸巫婆等特殊角色的技能，他们可以改变玩家的角色和/或阵营。
-- game_over: 任何时候你发现触发了游戏结束条件，都可以用它立刻结束游戏，工具会帮你告知所有玩家大家的真实身份。注意，在判断游戏结束前，要先确认是否有其他玩家的主动或被动技能可触发，若有，游戏可能未结束（例如有的恶魔死的早，会让其他玩家成为恶魔）。
 `
         const user = `当前全场状态:\n${stateText}\n当前时间: ${time}`
         const msgs = [{ role: 'system', content: sys }, { role: 'user', content: user }]
@@ -95,13 +75,6 @@ function createStoryTellerAgent({ } = {}) {
         return msgs
     }
 
-    // 根据输入消息推导工具列表
-    // 输入: messages 数组
-    // 输出: tools 数组（规范化前的原始 LLM 输出，可能是数组对象或携带字段）
-    // 解析规则:
-    // - 若返回为数组，直接视为 tools 列表
-    // - 若返回对象包含 tools 字段，优先使用 tools
-    // - 解析失败或不合法返回空数组
     async function deriveTools(messages) {
         const chat = new ChatArk({
             apiKey: process.env.OPENAI_API_KEY || process.env.API_KEY,
@@ -111,7 +84,6 @@ function createStoryTellerAgent({ } = {}) {
         record('info', 'LLM思考中...')
         const r = await chat.invoke(messages)
         record('info', 'LLM思考完成。')
-        // 调试：记录 LLM 原始返回，便于追踪解析问题
         try {
             const dbg = typeof r.content === 'string' ? r.content : JSON.stringify(r.content)
             record('llm', `LLM原始返回: ${dbg}`)
@@ -121,4 +93,5 @@ function createStoryTellerAgent({ } = {}) {
     return { buildInitialMessages, deriveTools }
 }
 
-module.exports = { createStoryTellerAgent }
+module.exports = { createStorytellerLlmAgent }
+

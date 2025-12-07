@@ -6,7 +6,7 @@ function question(promptText) {
   return new Promise(resolve => rl.question(promptText, answer => { rl.close(); resolve(answer) }))
 }
 
-// 交互层：封装标准输出与 stdin 读取
+// 封装所有的交互，作为用户、魔典、Agent的输入输出统一接口
 class Interaction {
   broadcast(text) {
     // TODO: 和魔典交互

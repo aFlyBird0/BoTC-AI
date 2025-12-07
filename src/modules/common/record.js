@@ -30,7 +30,8 @@ function ensureSession() {
   wsLLM = fs.createWriteStream(path.join(sessionDir, 'llm.log'), { flags: 'a' })
   wsGame = fs.createWriteStream(path.join(sessionDir, 'game.log'), { flags: 'a' })
   wsState = fs.createWriteStream(path.join(sessionDir, 'state.log'), { flags: 'a' })
-  process.stdout.write(`[log] session=${name} dir=${sessionDir} provider=${dayjs ? 'dayjs' : 'date'}\n`)
+  const rel = path.relative(process.cwd(), sessionDir)
+  process.stdout.write(`[log] session=${name} dir=${rel} provider=${dayjs ? 'dayjs' : 'date'}\n`)
   inited = true
 }
 

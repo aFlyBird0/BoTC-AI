@@ -2,11 +2,11 @@
 
 ## 概述
 - 目标：实现基于 LLM 的“血染钟楼”AI说书人，负责开局角色分配、夜晚/白天的规则推动、与玩家的交互，以及全局状态与 token 的维护。
-- 架构：将大模型相关逻辑置于 `src/modules/agent/` 下，游戏机制相关逻辑置于 `src/modules/game/` 下，入口为 `src/main_single.js`。
+- 架构：将大模型相关逻辑置于 `src/modules/agent/` 下，游戏机制相关逻辑置于 `src/modules/game/` 下，入口为 `src/main.js`。
 - 交互：当前使用命令行适配器，未来可替换为 IM/Web。
 
 ## 目录结构
-- `src/modules/agent/llmAgent.js`：LLM 调用与提示词（分配与技能执行）
+（已移除）`src/modules/agent/llmAgent.js`
 - `src/modules/utils/roleUtils.js`：角色相关工具（玩家洗牌等）
 - `src/modules/game/state.js`：对局状态（玩家、身份、token、存活）
 - `src/modules/game/scriptLoader.js`：剧本加载与解析（候选角色与夜序）
@@ -31,7 +31,7 @@
   - `BASE_URL`：LLM 接口地址
   - `MODEL`：模型标识
   - `API_KEY`：访问密钥
-- 启动：`node src/main_single.js`
+- 启动：`node src/main.js`
 - 调试：设置 `DEBUG=1` 可固定剧本与玩家数（默认 8），仍使用真实 LLM（若 `.env` 完整）。
 
 ## 提示词设计（分配阶段）
@@ -109,7 +109,7 @@
 - 纠偏：自动生成违规报告并请求 LLM 重试；多次失败则使用保底的确定性分配器
 
 ## 调试与扩展
-- 调试：`DEBUG=1 node src/main_single.js`（固定剧本与人数）
+- 调试：`DEBUG=1 node src/main.js`（固定剧本与人数）
 - 扩展：
   - 交互适配：将 `cliAdapter` 替换为 IM/Web 接口
   - RAG：将 `knowledge` 进一步清洗与结构化，接入检索增强提示

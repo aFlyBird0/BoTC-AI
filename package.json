@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node src/main_single.js",
+    "start": "node src/main.js",
     "knowledge:download": "node scripts/downloadKnowledge.js"
   },
   "dependencies": {

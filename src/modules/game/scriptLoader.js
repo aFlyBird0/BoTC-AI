@@ -62,7 +62,8 @@ async function selectAndLoadScript({ debug }) {
   try {
     if (debug) {
       const p = path.resolve(process.cwd(), 'game_script/#暗流涌动.json')
-      record('info', `Debug 使用固定剧本: ${p}`)
+      const rel = path.relative(process.cwd(), p)
+      record('debug', `使用固定剧本: ${rel}`)
       return await loadScript(p)
     } else {
       const scripts = await listScripts()

@@ -14,7 +14,7 @@
 ## 目录结构
 ```
 ├── src/                      # 源代码目录
-│   ├── main_single.js        # 程序入口
+│   ├── main.js               # 程序入口
 │   └── modules/              # 模块目录
 │       ├── agent/            # LLM代理相关模块
 │       ├── game/             # 游戏核心逻辑模块
@@ -62,13 +62,13 @@ API_KEY=your_api_key            # API访问密钥
 ## 运行项目
 ### 基本运行
 ```bash
-node src/main_single.js
+node src/main.js
 ```
 
 ### 调试模式
 调试模式下会固定剧本与玩家数量（默认8人），方便开发测试：
 ```bash
-DEBUG=1 node src/main_single.js
+DEBUG=1 node src/main.js
 ```
 
 ## 使用方法
