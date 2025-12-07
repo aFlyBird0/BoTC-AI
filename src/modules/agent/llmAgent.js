@@ -1,7 +1,7 @@
 const { ROLE_RATIO } = require('../common/const')
 const { renderScript } = require('../game/scriptLoader')
 const { ChatArk } = require('./ark')
-const { shuffleTokenMap } = require('../game/roleManager')
+const { shuffleTokenMap } = require('../utils/roleUtils')
 
 function createLlmAgent({ } = {}) {
   function buildDayCheckMessages({ stateSnapshot, script }) {

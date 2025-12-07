@@ -4,7 +4,7 @@ const { prompt } = require('./modules/utils/console')
 const { createCliAdapter } = require('./modules/game/cliAdapter')
 const { State } = require('./modules/game/state')
 const { listScripts, loadScript } = require('./modules/game/scriptLoader')
-const { determineRoleCounts } = require('./modules/game/rules')
+const { RoleAllocAgent } = require('./modules/agent/roleAllocAgent')
 const { createStoryteller } = require('./modules/game/storyteller')
 const { GameEngine } = require('./modules/game/engine')
 const { createLlmAgent } = require('./modules/agent/llmAgent')
@@ -45,7 +45,8 @@ async function main() {
   const customRules = await prompt('请输入分配风格或自定义规则(回车跳过): ')
   let allocation
   try {
-    allocation = await determineRoleCounts(playerCount, script, customRules)
+    const allocator = new RoleAllocAgent()
+    allocation = await allocator.allocate({ playerCount, script, customRules })
   } catch (e) {
     process.stdout.write('需要标准规则的角色配比与剧本格式，请提供后继续\n')
     process.stdout.write(`[Error] ${String(e && e.message || e)}\n`)
