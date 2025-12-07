@@ -4,9 +4,9 @@
 // - 循环执行直到 game_over
 require('dotenv').config()
 const path = require('path')
-const { NewSingleAgentState, renderStateTable } = require('./modules/game/state')
+const { AgentState, renderStateTable } = require('./modules/game/state')
 const { Interaction } = require('./modules/game/interaction')
-const { NewReActAgent } = require('./modules/agent/agent')
+const { ReActAgent } = require('./modules/agent/agent')
 const { createStoryTellerAgent } = require('./modules/agent/storyteller')
 const { listScripts, loadScript } = require('./modules/game/scriptLoader')
 const { record } = require('./modules/common/record')
@@ -23,7 +23,7 @@ async function run() {
     { seat: 7, knownRole: '士兵', realRole: '士兵', tokens: [] },
     { seat: 8, knownRole: '图书管理员', realRole: '酒鬼', tokens: ['是酒鬼'] },
   ]
-  const state = new NewSingleAgentState({ players })
+  const state = new AgentState({ players })
   const interaction = new Interaction()
   let scriptData = null
   try {
@@ -37,7 +37,7 @@ async function run() {
     }
   } catch {}
   const llm = createStoryTellerAgent()
-  const agent = new NewReActAgent({ llm, state, interaction, script: scriptData })
+  const agent = new ReActAgent({ llm, state, interaction, script: scriptData })
   // 打印当前状态表
   record('state', renderStateTable(state))
   record('info', '开始循环，单一prompt驱动')

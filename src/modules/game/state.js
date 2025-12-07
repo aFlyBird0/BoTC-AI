@@ -1,7 +1,7 @@
 // 最小状态管理：
 // - players: 座位、角色认知、真实角色、生死与 tokens
 // - tokenMap: 每座位的标记列表
-class NewSingleAgentState {
+class AgentState {
   constructor({ players }) {
     this.players = Array.isArray(players) ? players.map(p => ({ ...p, alive: true, executed: false, tokens: Array.isArray(p.tokens) ? p.tokens.slice() : [] })) : []
     this.tokenMap = new Map()
@@ -114,4 +114,4 @@ function renderStateTable(state) {
   return '\n' + [...lines, ...rows].join('\n')
 }
 
-module.exports = { NewSingleAgentState, renderStateTable }
+module.exports = { AgentState, renderStateTable }

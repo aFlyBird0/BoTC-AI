@@ -8,7 +8,7 @@ const { renderStateTable } = require('../game/state')
 // - 初始化一次 system/user 提示
 // - 循环：LLM→tools→applyTools→追加 messages（当前 role=user）
 // - ask 在工具层同步读取输入并返回消息；状态变更会返回快照消息；直到 game_over 结束
-class NewReActAgent {
+class ReActAgent {
   constructor({ llm, state, interaction, script }) {
     this.llm = llm
     this.state = state
@@ -41,4 +41,4 @@ class NewReActAgent {
   }
 }
 
-module.exports = { NewReActAgent }
+module.exports = { ReActAgent }
