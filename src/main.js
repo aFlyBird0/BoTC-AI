@@ -33,7 +33,7 @@ async function run() {
   // 打印当前状态表
   record('state', renderStateTable(state))
   record('info', '开始循环，单一prompt驱动')
-  await agent.loop(100)
+  await agent.loop(20)
 }
 
 if (require.main === module) {

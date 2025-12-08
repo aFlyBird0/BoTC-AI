@@ -37,7 +37,26 @@ class RoleAllocAgent {
     const setupAdjust = this.extractSetupAdjustments(script)
     const base = ROLE_RATIO[playerCount] || {}
     const adjustLines = setupAdjust.length ? setupAdjust.map(a => `- ${a.name}(${a.team}): ${a.text}`).join('\n') : '- (本剧本不包含可影响初始比例的角色)'
-    const sys = `角色: 血染钟楼AI说书人\n任务: 根据玩家人数与剧本乱序随机分配角色, 并生成全局token图\n输出: 仅返回json对象, 格式 { "players": [ { "seat": number, "knownRole": string, "realRole"?: string, "tokens": string[] } ] }\n硬约束:\n- 所有角色唯一分配 (同名角色不可重复)\n- 阵营数量必须满足基础比例 (镇民/外来者/爪牙/恶魔)\n- 仅可从候选角色列表中选择分配\n- 座位号从 1 到玩家总数连续分配\n初始比例特殊调整规则:\n- 如果你决定初始角色中包含以下任意一个角色，你在按照初始比例分配角色之后，还需要按照对应角色能力描述的[]内的要求继续进行调整，对应的差额数量从镇民中扣除\n${adjustLines}\n一致性规则:\n- 若技能描述包含“你以为自己是xxx”（认知覆盖类角色）, 则 knownRole 与 realRole 不一致, knownRole要按照角色能力描述分配；否则 knownRole=realRole\n提示: 初始 tokens 请根据 setup 与开局信息最小化生成 (如 "是酒鬼"、首夜信息等)`
+    const sys = `角色: 血染钟楼AI说书人
+任务: 根据玩家人数与剧本乱序随机分配角色, 并生成全局 token 图
+输出: 仅返回 JSON 对象，格式：
+{ "players": [ { "seat": number, "knownRole": string, "realRole"?: string, "tokens": string[] } ] }
+
+硬约束:
+- 所有角色唯一分配（同名角色不可重复）
+- 阵营数量必须满足基础比例（镇民/外来者/爪牙/恶魔）
+- 仅可从候选角色列表中选择分配
+- 座位号从 1 到玩家总数连续分配
+
+初始比例特殊调整规则:
+- 如果你决定初始角色中包含以下任意一个角色，你在按照初始比例分配角色之后，还需要按照对应角色能力描述的 [] 内的要求继续进行调整，对应的差额数量从镇民中扣除
+${adjustLines}
+
+一致性规则:
+- 若技能描述包含“你以为自己是 xxx”（认知覆盖类角色），则 knownRole 与 realRole 不一致，knownRole 要按照角色能力描述分配；否则 knownRole = realRole
+
+提示:
+- 初始 tokens 请根据 setup 与开局信息最小化生成（如 "是酒鬼"、首夜信息等）`
     const userPayload = { playerCount, baseRatio: base, scriptName: meta && meta.name || '', candidates, require: { format: { players: [{ seat: 1, knownRole: '', realRole: '', tokens: [] }] } } }
     const user = JSON.stringify(userPayload)
     const msgs = [{ role: 'system', content: sys }, { role: 'user', content: user }]
@@ -47,7 +66,7 @@ class RoleAllocAgent {
 
   async allocate({ playerCount, script, customRules } = {}) {
     if (process.env.DEBUG === '1') {
-      record('info', '[Debug]角色分配：使用固定角色分配')
+      record('info', '角色分配：使用固定角色分配')
       return { players: [
         { seat: 1, knownRole: '红唇女郎', realRole: '红唇女郎', tokens: [] },
         { seat: 2, knownRole: '洗衣妇', realRole: '洗衣妇', tokens: [] },
@@ -70,4 +89,3 @@ class RoleAllocAgent {
 }
 
 module.exports = { RoleAllocAgent }
-

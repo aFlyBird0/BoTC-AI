@@ -42,6 +42,7 @@ function writeLine(type, line) {
   if (type !== 'llm' && type !== 'tool' && type !== 'script') { try { wsGame && wsGame.write(line) } catch {} }
 }
 
+// 当前主要是作为日志用，或者生成魔典以外的游戏局内统计信息，更偏向服务器端
 function record(type, obj) {
   ensureSession()
   const ts = nowISO()

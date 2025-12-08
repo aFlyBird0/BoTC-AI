@@ -7,6 +7,7 @@ function question(promptText) {
 }
 
 // 封装所有的交互，作为用户、魔典、Agent的输入输出统一接口
+// TODO: 后期函数声明稳定后，定义成接口，写两个不同的实现，Web/CLI
 class Interaction {
   broadcast(text) {
     // TODO: 和魔典交互
