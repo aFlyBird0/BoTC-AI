@@ -91,10 +91,6 @@ async function applyTools({ state, interaction, tools }) {
       const msg = pl && pl.reason ? `游戏结束: ${pl.reason}` : '游戏结束'
       interaction.broadcast(msg)
       results.push({ type: 'game_over', winner: pl && pl.winner, reason: pl && pl.reason })
-    },
-    // 结束当前角色/阶段
-    end_role: async pl => {
-      results.push({ type: 'end_role' })
     }
   }
   // 主循环：分发执行工具，忽略未定义类型
